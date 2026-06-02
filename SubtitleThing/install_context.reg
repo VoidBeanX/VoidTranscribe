@@ -1,0 +1,8 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\*\shell\SubtitleThing]
+@="Transcribe with SubtitleThing"
+"Icon"="\"C:\\Program Files\\SubtitleThing\\SubtitleThing.exe\""
+
+[HKEY_CLASSES_ROOT\*\shell\SubtitleThing\command]
+@="\"C:\\Program Files\\SubtitleThing\\SubtitleThing.exe\" \"%1\""
