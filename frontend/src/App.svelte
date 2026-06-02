@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
-  import { 
+  import {
     CheckRequirements,
     TranscribeVideo,
     SelectVideoFileDialog,
@@ -13,7 +13,7 @@
     UnregisterSendTo,
     ValidateVideoFile
   } from '../wailsjs/go/main/App.js';
-  
+
   import { EventsOn, EventsOff } from '../wailsjs/runtime/runtime.js';
 
   // Tabs
@@ -47,7 +47,7 @@
   let transcriptionText = "";
   let selectedDeviceMode = "cuda"; // 'cuda' = GPU Only, 'auto' = Auto, 'cpu' = CPU Only
   let selectedTimecodeFormat = "davinci";
-  
+
   let selectedModel = "distil-large-v3";
   let showVramWarning = false;
   let detectedVramGB = 0;
@@ -67,7 +67,7 @@
     const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
     logsScrolledUp = !isAtBottom;
   }
-  
+
   // Real-time logging & segments
   let realtimeLogs = [];
   let realtimeSegments = [];
@@ -100,7 +100,7 @@
     selectedTimecodeFormat = localStorage.getItem('timecodeFormat') || "davinci";
     selectedModel = localStorage.getItem('selectedModel') || "distil-large-v3";
     selectedDeviceMode = localStorage.getItem('selectedDeviceMode') || "cuda";
-    
+
     // Register Wails Event Listeners for stdout/stderr streaming
     EventsOn("transcription-stdout", handleStdout);
     EventsOn("transcription-stderr", handleStderr);
@@ -202,7 +202,7 @@
     } else if (line.startsWith("[LOG] ")) {
       const msg = line.substring(6).trim();
       realtimeLogs = [...realtimeLogs, `[INFO] ${msg}`];
-      
+
       // Update transcription stepper stage dynamically
       if (msg.includes("Stage 1/3:")) {
         currentStage = 1;
@@ -256,7 +256,7 @@
 
   async function browseVideo() {
     if (transcribing) return;
-    
+
     try {
       const result = await SelectVideoFileDialog();
       if (result) {
@@ -280,7 +280,7 @@
     try {
       statusMessage = "Verifying file format...";
       realtimeLogs = ["[GO] Verifying video file format and audio track presence..."];
-      
+
       const validation = await ValidateVideoFile(selectedVideoPath);
       if (!validation.isValid) {
         statusMessage = "Error: " + validation.errorMessage;
@@ -294,13 +294,13 @@
         alert("Invalid file: " + validation.errorMessage);
         return;
       }
-      
+
       realtimeLogs = [...realtimeLogs, "[INFO] File format validation successful. Audio stream detected."];
     } catch (err) {
       console.error("File format validation failed:", err);
       // Fallback: if validation itself fails (e.g. backend error), proceed
     }
- 
+
     // Strict Device Verification Check: Prompt popup if local CUDA DLLs are missing and GPU mode is selected
     if (selectedDeviceMode === 'cuda' && !requirements.cudaLibsExists) {
       showCudaPrompt = true;
@@ -317,7 +317,7 @@
       };
       const req = vramReqs[selectedModel] || 3.0;
       requiredVramGB = req;
-      
+
       try {
         const vramGB = await GetGpuVramGB();
         detectedVramGB = vramGB;
@@ -339,7 +339,7 @@
     realtimeLogs = [];
     realtimeSegments = [];
     statusMessage = "Initializing Whisper engine...";
-    
+
     userScrolledUp = false;
     logsScrolledUp = false;
 
@@ -438,7 +438,7 @@
 </script>
 
 <div class="h-screen w-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden select-none" style="background: radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15), transparent), radial-gradient(circle at 10% 80%, rgba(168, 85, 247, 0.12), transparent), #090d16;">
-  
+
   <!-- Sleek Top Navbar -->
   <header class="h-16 px-8 flex items-center justify-between border-b border-slate-900 bg-slate-950/40 backdrop-blur-md z-10 shrink-0">
     <div class="flex items-center space-x-3">
@@ -448,15 +448,15 @@
         </svg>
       </div>
       <div>
-        <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-indigo-200 via-indigo-100 to-white bg-clip-text text-transparent">SubtitleThing</h1>
-        <p class="text-xs text-slate-400 -mt-1">CGO-Free Local GPU Audio Transcription</p>
+        <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-indigo-200 via-indigo-100 to-white bg-clip-text text-transparent">VoidTranscribe</h1>
+        <p class="text-xs text-slate-400 -mt-1">Subtitle Transcription Tool</p>
       </div>
     </div>
 
     <!-- Mode / CUDA Status Badge -->
     <div class="flex items-center space-x-4">
       {#if !checkingRequirements && !requirements.cudaLibsExists}
-        <button 
+        <button
           on:click={() => showCudaPrompt = true}
           class="text-xs px-2.5 py-1 rounded-full bg-amber-950/80 hover:bg-amber-900/80 text-amber-400 border border-amber-900/60 flex items-center space-x-1.5 shadow-md hover:scale-102 transition-all active:scale-98 cursor-pointer"
         >
@@ -484,14 +484,14 @@
 
       <!-- Tab Buttons -->
       <nav class="flex space-x-1 bg-slate-900/60 p-1 rounded-lg border border-slate-800/40">
-        <button 
-          on:click={() => activeTab = 'transcribe'} 
+        <button
+          on:click={() => activeTab = 'transcribe'}
           class="px-4 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 {activeTab === 'transcribe' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10' : 'text-slate-400 hover:text-slate-200'}"
         >
           Transcribe
         </button>
-        <button 
-          on:click={() => activeTab = 'settings'} 
+        <button
+          on:click={() => activeTab = 'settings'}
           class="px-4 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 {activeTab === 'settings' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10' : 'text-slate-400 hover:text-slate-200'}"
         >
           Settings
@@ -502,11 +502,11 @@
 
   <!-- Main Display Body -->
   <main class="flex-1 p-8 overflow-hidden flex flex-col items-center justify-center">
-    
+
     <!-- Tab 1: Transcription Studio -->
     {#if activeTab === 'transcribe'}
       <div class="w-full max-w-4xl h-full flex flex-col space-y-6">
-        
+
         <!-- Requirements Alert banner -->
         {#if !checkingRequirements && requirementsError}
           <div class="px-5 py-3.5 rounded-xl bg-amber-950/30 border border-amber-900/50 text-amber-300 text-xs flex items-start space-x-3 shadow-lg">
@@ -525,12 +525,12 @@
 
         <!-- Workspace Layout -->
         <div class="flex-1 grid grid-cols-5 gap-6 min-h-0">
-          
+
           <!-- Left Part: Selector and Controls -->
           <div class="col-span-2 flex flex-col space-y-5">
-            
+
             <!-- Beautiful Glass Dropzone -->
-            <div 
+            <div
               on:click={browseVideo}
               class="flex-1 rounded-2xl border-2 border-dashed border-slate-800 bg-slate-900/25 hover:bg-slate-900/40 hover:border-indigo-500/50 transition-all duration-300 flex flex-col items-center justify-center p-6 cursor-pointer group text-center backdrop-blur-sm relative"
             >
@@ -541,7 +541,7 @@
               </div>
               <span class="text-sm font-semibold text-slate-300 group-hover:text-slate-100 transition-colors">Select video file</span>
               <span class="text-xs text-slate-500 mt-1 max-w-[200px] leading-relaxed">MP4, MKV, AVI, MOV or WEBM local files</span>
-              
+
               {#if selectedVideoPath}
                 <div class="absolute inset-x-4 bottom-4 py-2 px-3 rounded-lg bg-slate-950/80 border border-slate-800/80 flex items-center justify-between text-left">
                   <div class="min-w-0 flex-1">
@@ -562,8 +562,8 @@
               <!-- Timecode Format dropdown -->
               <div class="flex items-center justify-between text-xs">
                 <span class="font-medium text-slate-400">Timecode Style:</span>
-                <select 
-                  bind:value={selectedTimecodeFormat} 
+                <select
+                  bind:value={selectedTimecodeFormat}
                   disabled={transcribing}
                   class="bg-slate-950 border border-slate-800 text-indigo-300 font-semibold px-2 py-1 rounded focus:outline-none focus:border-indigo-500 disabled:opacity-50 transition-all cursor-pointer text-xs animate-none"
                 >
@@ -587,8 +587,8 @@
 
               <!-- Main Button -->
               {#if !transcribing}
-                <button 
-                  on:click={startTranscription} 
+                <button
+                  on:click={startTranscription}
                   disabled={!selectedVideoPath || requirementsError !== ""}
                   class="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-indigo-600/20 disabled:opacity-40 disabled:pointer-events-none transition-all duration-300 active:scale-98 flex items-center justify-center space-x-2"
                 >
@@ -604,17 +604,17 @@
                     <span class="font-bold text-indigo-400 animate-pulse">{statusMessage}</span>
                     <span class="font-bold text-slate-300">{progress.toFixed(1)}%</span>
                   </div>
-                  
+
                   <!-- Glowing progress track -->
                   <div class="h-2 w-full rounded-full bg-slate-950 overflow-hidden border border-slate-900/60 p-0.5">
-                    <div 
+                    <div
                       class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-indigo-400 to-purple-500 transition-all duration-300 shadow-md shadow-indigo-500/20"
                       style="width: {progress}%"
                     ></div>
                   </div>
 
                   <!-- Cancel Button -->
-                  <button 
+                  <button
                     on:click={cancelTranscriptionProcess}
                     class="w-full py-1.5 mt-1 rounded-lg bg-red-950/30 hover:bg-red-950/60 text-red-400 font-semibold text-xs tracking-wider border border-red-900/30 hover:border-red-700/40 transition-all active:scale-98 flex items-center justify-center space-x-1.5"
                   >
@@ -631,21 +631,21 @@
 
           <!-- Right Part: Real-Time Terminal Output and Live Text Stream -->
           <div class="col-span-3 flex flex-col space-y-5 min-h-0">
-            
+
             <!-- Transcription Status Dashboard Card -->
             {#if transcribing || transcriptionText || currentStage > 0}
               <div class="rounded-2xl bg-slate-900/25 border border-slate-900 backdrop-blur-sm p-5 flex flex-col space-y-3 shrink-0 transition-all duration-300">
-                
+
                 <!-- Top Row: Stage Stepper & Timer -->
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  
+
                   <!-- Stepper Stages -->
                   <div class="flex items-center space-x-2 text-[10px] sm:text-xs">
                     <!-- Stage 1: Load Model -->
                     <div class="flex items-center space-x-1.5">
                       <div class="h-5 w-5 rounded-full flex items-center justify-center border font-bold text-[10px] transition-all
-                        {currentStage > 1 ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400' : 
-                         currentStage === 1 ? 'bg-indigo-950/40 border-indigo-500 text-indigo-400 shadow-md shadow-indigo-500/20 animate-pulse' : 
+                        {currentStage > 1 ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400' :
+                         currentStage === 1 ? 'bg-indigo-950/40 border-indigo-500 text-indigo-400 shadow-md shadow-indigo-500/20 animate-pulse' :
                          'bg-slate-950/40 border-slate-800 text-slate-500'}"
                       >
                         {#if currentStage > 1}
@@ -657,8 +657,8 @@
                         {/if}
                       </div>
                       <span class="font-semibold transition-all
-                        {currentStage > 1 ? 'text-emerald-400/80' : 
-                         currentStage === 1 ? 'text-indigo-300 font-bold' : 
+                        {currentStage > 1 ? 'text-emerald-400/80' :
+                         currentStage === 1 ? 'text-indigo-300 font-bold' :
                          'text-slate-500'}"
                       >Model Load</span>
                     </div>
@@ -671,8 +671,8 @@
                     <!-- Stage 2: Audio Preprocess -->
                     <div class="flex items-center space-x-1.5">
                       <div class="h-5 w-5 rounded-full flex items-center justify-center border font-bold text-[10px] transition-all
-                        {currentStage > 2 ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400' : 
-                         currentStage === 2 ? 'bg-indigo-950/40 border-indigo-500 text-indigo-400 shadow-md shadow-indigo-500/20 animate-pulse' : 
+                        {currentStage > 2 ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400' :
+                         currentStage === 2 ? 'bg-indigo-950/40 border-indigo-500 text-indigo-400 shadow-md shadow-indigo-500/20 animate-pulse' :
                          'bg-slate-950/40 border-slate-800 text-slate-500'}"
                       >
                         {#if currentStage > 2}
@@ -684,8 +684,8 @@
                         {/if}
                       </div>
                       <span class="font-semibold transition-all
-                        {currentStage > 2 ? 'text-emerald-400/80' : 
-                         currentStage === 2 ? 'text-indigo-300 font-bold' : 
+                        {currentStage > 2 ? 'text-emerald-400/80' :
+                         currentStage === 2 ? 'text-indigo-300 font-bold' :
                          'text-slate-500'}"
                       >Preprocessing</span>
                     </div>
@@ -698,8 +698,8 @@
                     <!-- Stage 3: Transcribe -->
                     <div class="flex items-center space-x-1.5">
                       <div class="h-5 w-5 rounded-full flex items-center justify-center border font-bold text-[10px] transition-all
-                        {currentStage > 3 ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400' : 
-                         currentStage === 3 ? 'bg-indigo-950/40 border-indigo-500 text-indigo-400 shadow-md shadow-indigo-500/20 animate-pulse' : 
+                        {currentStage > 3 ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400' :
+                         currentStage === 3 ? 'bg-indigo-950/40 border-indigo-500 text-indigo-400 shadow-md shadow-indigo-500/20 animate-pulse' :
                          'bg-slate-950/40 border-slate-800 text-slate-500'}"
                       >
                         {#if currentStage > 3}
@@ -711,8 +711,8 @@
                         {/if}
                       </div>
                       <span class="font-semibold transition-all
-                        {currentStage > 3 ? 'text-emerald-400/80' : 
-                         currentStage === 3 ? 'text-indigo-300 font-bold' : 
+                        {currentStage > 3 ? 'text-emerald-400/80' :
+                         currentStage === 3 ? 'text-indigo-300 font-bold' :
                          'text-slate-500'}"
                       >Transcribe</span>
                     </div>
@@ -749,7 +749,7 @@
                   </div>
 
                   <div class="h-2 w-full rounded-full bg-slate-950 overflow-hidden border border-slate-900/60 p-0.5 relative">
-                    <div 
+                    <div
                       class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-indigo-400 to-purple-500 transition-all duration-300 shadow-md shadow-indigo-500/20"
                       style="width: {progress}%"
                     ></div>
@@ -758,7 +758,7 @@
 
                 <!-- Open File Button (when finished) -->
                 {#if currentStage === 4 && transcriptionText}
-                  <button 
+                  <button
                     on:click={openTranscriptFile}
                     class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs tracking-wider shadow-lg shadow-emerald-600/20 transition-all active:scale-98 flex items-center justify-center space-x-2 border border-emerald-500/20"
                   >
@@ -788,7 +788,7 @@
               </div>
 
               <!-- Content wrapper -->
-              <div 
+              <div
                 bind:this={segmentViewElement}
                 on:scroll={handleScroll}
                 class="flex-1 overflow-y-auto space-y-3.5 pr-2 custom-scrollbar text-sm"
@@ -821,7 +821,7 @@
                   <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping"></span>
                 {/if}
               </div>
-              <div 
+              <div
                 bind:this={logConsoleElement}
                 on:scroll={handleLogsScroll}
                 class="flex-1 overflow-y-auto font-mono text-[11px] text-slate-400 mt-2 space-y-1.5 pr-2 custom-scrollbar text-left select-all"
@@ -856,7 +856,7 @@
     <!-- Tab 2: Settings -->
     {#if activeTab === 'settings'}
       <div class="w-full max-w-2xl bg-slate-900/25 border border-slate-900/60 rounded-3xl p-8 backdrop-blur-md space-y-6">
-        
+
         <div class="flex items-center space-x-4">
           <div class="h-12 w-12 rounded-xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -874,12 +874,12 @@
           <!-- Whisper Configuration Panel -->
           <div class="p-5 rounded-2xl bg-slate-950/40 border border-slate-900 flex flex-col space-y-4">
             <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Model & Hardware Settings</h3>
-            
+
             <!-- Target Model Select -->
             <div class="flex items-center justify-between text-xs">
               <span class="font-medium text-slate-300">Target Model:</span>
-              <select 
-                bind:value={selectedModel} 
+              <select
+                bind:value={selectedModel}
                 disabled={transcribing}
                 class="bg-slate-950 border border-slate-800 text-indigo-300 font-semibold px-2 py-1.5 rounded focus:outline-none focus:border-indigo-500 disabled:opacity-50 transition-all cursor-pointer text-xs"
               >
@@ -893,8 +893,8 @@
             <!-- Inference Device Select -->
             <div class="flex items-center justify-between text-xs border-t border-slate-900/60 pt-3">
               <span class="font-medium text-slate-300">Inference Device:</span>
-              <select 
-                bind:value={selectedDeviceMode} 
+              <select
+                bind:value={selectedDeviceMode}
                 disabled={transcribing}
                 class="bg-slate-950 border border-slate-800 text-indigo-300 font-semibold px-2 py-1.5 rounded focus:outline-none focus:border-indigo-500 disabled:opacity-50 transition-all cursor-pointer text-xs"
               >
@@ -908,12 +908,12 @@
           <!-- Send To Integration Panel -->
           <div class="space-y-4 border-t border-slate-900 pt-6">
             <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Windows Explorer "Send To" Integration</h3>
-            
+
             <!-- Explanation block -->
             <div class="text-xs text-slate-300 leading-relaxed bg-slate-950/40 p-4 border border-slate-900 rounded-2xl">
               <span class="font-bold text-slate-200 block mb-1">What is Windows "Send To" Integration?</span>
-              Adding SubtitleThing to the "Send To" menu lets you right-click any video file in Windows Explorer and choose <strong class="text-indigo-400 font-semibold">Send to -> SubtitleThing</strong>. 
-              This immediately launches the SubtitleThing GUI, loads the video file, and automatically starts transcribing using your configured Settings. This is a secure, clean alternative that does not require administrator privileges!
+              Adding VoidTranscribe to the "Send To" menu lets you right-click any video file in Windows Explorer and choose <strong class="text-indigo-400 font-semibold">Send to -> VoidTranscribe</strong>.
+              This immediately launches the VoidTranscribe GUI, loads the video file, and automatically starts transcribing using your configured Settings. This is a secure, clean alternative that does not require administrator privileges!
             </div>
 
             <!-- Status indicator -->
@@ -924,7 +924,7 @@
                   {requirements.isRegistered ? 'Active (Shortcut Installed)' : 'Not Installed'}
                 </span>
               </div>
-              
+
               <div class="h-3.5 w-3.5 rounded-full {requirements.isRegistered ? 'bg-emerald-500 shadow-md shadow-emerald-500/20' : 'bg-slate-700'}"></div>
             </div>
 
@@ -952,14 +952,14 @@
 
             <!-- Controls -->
             <div class="flex space-x-4">
-              <button 
+              <button
                 on:click={handleRegisterRegistry}
                 disabled={requirements.isRegistered}
                 class="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-bold text-xs tracking-wider text-white shadow-md shadow-emerald-700/10 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer"
               >
                 Add SendTo Shortcut
               </button>
-              <button 
+              <button
                 on:click={handleUnregisterRegistry}
                 disabled={!requirements.isRegistered}
                 class="px-6 py-3 rounded-xl bg-slate-800 hover:bg-red-950/40 text-slate-300 hover:text-red-400 font-bold text-xs tracking-wider border border-slate-700/60 hover:border-red-900/40 transition-all cursor-pointer"
@@ -976,11 +976,11 @@
 
   <!-- Sleek Mini Footer -->
   <footer class="h-9 border-t border-slate-900 bg-slate-950/20 px-8 flex items-center justify-between text-[10px] text-slate-500 shrink-0">
-    <span>Windows SendTo Transcriber</span>
+    <span>Transcribe a video offline</span>
     <span class="flex items-center space-x-3">
       <span>Model: {selectedModel}</span>
       <span class="h-1 w-1 bg-slate-700 rounded-full"></span>
-      <span>CGO-Free</span>
+      <span>By VoidBean</span>
     </span>
   </footer>
 
@@ -988,7 +988,7 @@
   {#if showCudaPrompt}
     <div class="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center z-50 p-4 select-none">
       <div class="w-full max-w-lg bg-slate-900 border border-slate-800/80 rounded-3xl p-6 shadow-2xl flex flex-col space-y-4 text-left relative overflow-hidden">
-        
+
         {#if cudaInstalling}
           <!-- Installation Panel -->
           <div class="flex items-center space-x-3">
@@ -1003,9 +1003,9 @@
               <p class="text-[10px] text-slate-500">Downloading nvidia-cublas-cu12 and nvidia-cudnn-cu12. Please do not close the app.</p>
             </div>
           </div>
-          
+
           <div class="h-60 rounded-xl bg-slate-950 border border-slate-900 p-3.5 flex flex-col min-h-0 shrink-0">
-            <div 
+            <div
               bind:this={cudaConsoleElement}
               class="flex-1 overflow-y-auto font-mono text-[10px] text-slate-400 space-y-1.5 pr-2 custom-scrollbar text-left select-all"
             >
@@ -1058,7 +1058,7 @@
               <span>Installation Logs</span>
               <span class="text-slate-600 font-mono text-[8px]">{cudaInstallLogs.length} lines</span>
             </div>
-            <div 
+            <div
               bind:this={cudaConsoleElement}
               class="flex-1 overflow-y-auto font-mono text-[10px] text-slate-400 space-y-1.5 pr-2 custom-scrollbar text-left select-all"
             >
@@ -1078,20 +1078,20 @@
 
           <div class="flex space-x-3 pt-2">
             {#if cudaInstallSuccess}
-              <button 
+              <button
                 on:click={() => showCudaPrompt = false}
                 class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs tracking-wider transition-all active:scale-98 shadow-lg shadow-emerald-600/10"
               >
                 Continue to Transcription
               </button>
             {:else}
-              <button 
+              <button
                 on:click={startCudaInstallation}
                 class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs tracking-wider transition-all active:scale-98 shadow-lg shadow-indigo-600/10"
               >
                 Retry Installation
               </button>
-              <button 
+              <button
                 on:click={() => { selectedDeviceMode = 'cpu'; showCudaPrompt = false; }}
                 class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs tracking-wider border border-slate-700/60 transition-all"
               >
@@ -1114,26 +1114,26 @@
               </p>
             </div>
           </div>
-          
+
           <div class="text-[11px] text-slate-300 leading-relaxed bg-slate-950/45 p-4 rounded-2xl border border-slate-900/60">
             <span class="font-bold block text-slate-400 mb-1">Zero-Config Portable Solution:</span>
-            SubtitleThing can download and install these CUDA support DLLs directly into your isolated Python folder. This will enable native GPU hardware acceleration without changing your global Windows system path or settings (Approx. 1.2GB download).
+            VoidTranscribe can download and install these CUDA support DLLs directly into your isolated Python folder. This will enable native GPU hardware acceleration without changing your global Windows system path or settings (Approx. 1.2GB download).
           </div>
-          
+
           <div class="flex space-x-3 pt-2">
-            <button 
+            <button
               on:click={startCudaInstallation}
               class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs tracking-wider transition-all active:scale-98 shadow-lg shadow-indigo-600/10"
             >
               Download & Install CUDA
             </button>
-            <button 
+            <button
               on:click={() => { selectedDeviceMode = 'cpu'; showCudaPrompt = false; }}
               class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs tracking-wider border border-slate-700/60 transition-all"
             >
               Use CPU Mode
             </button>
-            <button 
+            <button
               on:click={() => showCudaPrompt = false}
               class="px-3.5 py-2.5 rounded-xl hover:bg-slate-800 text-slate-400 font-semibold text-xs transition-all"
             >
@@ -1141,7 +1141,7 @@
             </button>
           </div>
         {/if}
-        
+
       </div>
     </div>
   {/if}
@@ -1174,19 +1174,19 @@
         </div>
 
         <div class="flex flex-col space-y-2.5 pt-1">
-          <button 
+          <button
             on:click={bypassVramAndRun}
             class="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs tracking-wider transition-all active:scale-98 shadow-lg shadow-amber-600/10"
           >
             Continue Anyways (Force GPU)
           </button>
-          <button 
+          <button
             on:click={() => { selectedDeviceMode = 'cpu'; showVramWarning = false; startTranscription(); }}
             class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs tracking-wider transition-all active:scale-98 border border-slate-700/40"
           >
             Switch to CPU Mode & Run
           </button>
-          <button 
+          <button
             on:click={() => showVramWarning = false}
             class="w-full py-2.5 rounded-xl bg-slate-950 border border-slate-900 hover:bg-slate-900 text-slate-400 font-semibold text-xs tracking-wider transition-all active:scale-98"
           >

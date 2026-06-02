@@ -3,7 +3,7 @@
 
 ## Objective
 
-Build a standalone Windows desktop application named **SubtitleThing** using **Go (Wails v2)** for the backend/GUI orchestration, **Tailwind CSS** for the frontend, and an isolated **Portable Python** runtime to handle local GPU-accelerated video transcription via `faster-whisper`. The application must support standard GUI mode and a headless context-menu mode ("Right-Click -> Transcribe").
+Build a standalone Windows desktop application named **VoidTranscribe** using **Go (Wails v2)** for the backend/GUI orchestration, **Tailwind CSS** for the frontend, and an isolated **Portable Python** runtime to handle local GPU-accelerated video transcription via `faster-whisper`. The application must support standard GUI mode and a headless context-menu mode ("Right-Click -> Transcribe").
 
 ---
 
@@ -12,10 +12,10 @@ Build a standalone Windows desktop application named **SubtitleThing** using **G
 Ensure the final build directory structure exactly matches the template below. The application must run entirely out of this self-contained folder without installing global system dependencies.
 
 ```
-SubtitleThing/
+VoidTranscribe/
 ├── build/
 │   └── bin/
-│       ├── SubtitleThing.exe     (Compiled Wails Go Binary)
+│       ├── VoidTranscribe.exe     (Compiled Wails Go Binary)
 │       ├── ffmpeg.exe            (Standalone Windows FFmpeg binary)
 │       └── engine/               (Isolated Python Runtime Environment)
 │           ├── python.exe        (Windows embeddable python executable)
@@ -35,7 +35,7 @@ SubtitleThing/
 
 ### Phase 1: Initialize the Go & Tailwind Monorepo
 
-* [ ] Run `wails init -n SubtitleThing -t svelte` (or `react`) to scaffold the core project template.
+* [ ] Run `wails init -n VoidTranscribe -t svelte` (or `react`) to scaffold the core project template.
 * [ ] Navigate to the `frontend/` folder and initialize Tailwind CSS: `npm install -D tailwindcss postcss autoprefixer && npx tailwindcss init -p`.
 * [ ] Configure `frontend/tailwind.config.js` to parse all source components.
 * [ ] Inject `@tailwind base; @tailwind components; @tailwind utilities;` into the main application CSS file.
@@ -74,9 +74,9 @@ SubtitleThing/
 ### Phase 5: Windows Context Menu Integration (`.reg`)
 
 * [ ] Create an explicit Windows Registry deployment file named `install_context.reg`.
-* [ ] Map the entry to the global file pointer key: `[HKEY_CLASSES_ROOT\*\shell\SubtitleThing]`.
-* [ ] Set the display string label to `"Transcribe with SubtitleThing"`.
-* [ ] Bind the sub-command execution string to point directly to the expected absolute installation path, appending the standard command line parameter: `"C:\Program Files\SubtitleThing\SubtitleThing.exe" "%1"`.
+* [ ] Map the entry to the global file pointer key: `[HKEY_CLASSES_ROOT\*\shell\VoidTranscribe]`.
+* [ ] Set the display string label to `"Transcribe with VoidTranscribe"`.
+* [ ] Bind the sub-command execution string to point directly to the expected absolute installation path, appending the standard command line parameter: `"C:\Program Files\VoidTranscribe\VoidTranscribe.exe" "%1"`.
 
 ### Phase 8: Robust Subprocess Management & Model Configuration
 

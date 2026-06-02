@@ -1,4 +1,4 @@
-module SubtitleThing
+module VoidTranscribe
 
 go 1.21
 

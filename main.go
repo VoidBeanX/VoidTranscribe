@@ -22,10 +22,10 @@ func main() {
 	if len(os.Args) > 1 {
 		targetPath := os.Args[1]
 		if targetPath == "--help" || targetPath == "-h" {
-			fmt.Println("SubtitleThing - CGO-free Local GPU Video Transcriber")
+			fmt.Println("VoidTranscribe - Transcirber")
 			fmt.Println("Usage:")
-			fmt.Println("  SubtitleThing.exe              Launch the graphical user interface")
-			fmt.Println("  SubtitleThing.exe <videoPath>  Launch GUI and automatically transcribe video file")
+			fmt.Println("  VoidTranscribe.exe              Launch the graphical user interface")
+			fmt.Println("  VoidTranscribe.exe <videoPath>  Launch GUI and automatically transcribe video file")
 			os.Exit(0)
 		}
 		startupPath = targetPath
@@ -39,7 +39,7 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:  "SubtitleThing",
+		Title:  "VoidTranscribe",
 		Width:  1024,
 		Height: 900,
 		AssetServer: &assetserver.Options{
@@ -62,7 +62,7 @@ func main() {
 func runHeadlessTranscription(videoPath string) {
 	// Clean the path
 	videoPath = filepath.Clean(videoPath)
-	
+
 	pythonPath, scriptPath, err := findEnginePaths()
 	if err != nil {
 		// Since it's headless, we can write the error to a log next to the video
@@ -72,7 +72,7 @@ func runHeadlessTranscription(videoPath string) {
 
 	// Prepare the command
 	cmd := exec.Command(pythonPath, scriptPath, videoPath)
-	
+
 	// Windows-Specific Constraint: Hide command prompt window
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		HideWindow: true,

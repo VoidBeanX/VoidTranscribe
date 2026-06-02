@@ -1,4 +1,4 @@
-# PowerShell script to remove the legacy SubtitleThing right-click context menu from the Windows Registry
+# PowerShell script to remove the legacy VoidTranscribe right-click context menu from the Windows Registry
 
 # Check for administrative privileges (required to modify HKEY_CLASSES_ROOT)
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -11,8 +11,8 @@ if (-not $isAdmin) {
 
 # Registry paths for the old context menu
 $pathsToDelete = @(
-    "Registry::HKEY_CLASSES_ROOT\*\shell\SubtitleThing\command",
-    "Registry::HKEY_CLASSES_ROOT\*\shell\SubtitleThing"
+    "Registry::HKEY_CLASSES_ROOT\*\shell\VoidTranscribe\command",
+    "Registry::HKEY_CLASSES_ROOT\*\shell\VoidTranscribe"
 )
 
 Write-Host "Cleaning up old registry integration..." -ForegroundColor Cyan

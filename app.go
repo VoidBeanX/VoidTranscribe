@@ -110,13 +110,13 @@ func getSendToPath() (string, error) {
 	return filepath.Join(appData, "Microsoft", "Windows", "SendTo"), nil
 }
 
-// GetSendToLnkPath returns the path to the SubtitleThing.lnk file in the SendTo folder
+// GetSendToLnkPath returns the path to the VoidTranscribe.lnk file in the SendTo folder
 func getSendToLnkPath() (string, error) {
 	dir, err := getSendToPath()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(dir, "SubtitleThing.lnk"), nil
+	return filepath.Join(dir, "VoidTranscribe.lnk"), nil
 }
 
 // IsSendToRegistered checks if the Send To shortcut exists
@@ -143,7 +143,7 @@ func (a *App) RegisterSendTo() error {
 	// If in development mode (running from temp or go run), point to the build output path
 	if strings.Contains(exePath, "Temp") || strings.Contains(exePath, "go-build") {
 		cwd, _ := os.Getwd()
-		exePath = filepath.Join(cwd, "build", "bin", "SubtitleThing.exe")
+		exePath = filepath.Join(cwd, "build", "bin", "VoidTranscribe.exe")
 	}
 
 	lnkPath, err := getSendToLnkPath()
@@ -155,7 +155,7 @@ func (a *App) RegisterSendTo() error {
 	psCmd := fmt.Sprintf(`$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%s'); $Shortcut.TargetPath = '%s'; $Shortcut.IconLocation = '%s'; $Shortcut.Save()`, lnkPath, exePath, exePath)
 	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command", psCmd)
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
-	
+
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to create SendTo shortcut: %w", err)
 	}
@@ -286,12 +286,12 @@ func (a *App) SelectVideoFileDialog() (string, error) {
 func (a *App) CancelTranscription() error {
 	if a.activeCmd != nil && a.activeCmd.Process != nil {
 		pid := a.activeCmd.Process.Pid
-		
+
 		// Use Windows taskkill with /T (tree) and /F (force) to kill the process and all child processes
 		killCmd := exec.Command("taskkill", "/F", "/T", "/PID", fmt.Sprintf("%d", pid))
 		killCmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 		_ = killCmd.Run()
-		
+
 		a.activeCmd = nil
 		wailsruntime.EventsEmit(a.ctx, "transcription-stdout", "[GO] Transcription process was cancelled by the user.")
 	}
@@ -365,7 +365,7 @@ func (a *App) InstallCudaLibraries() error {
 		// Dev fallback
 		targetDir = filepath.Join(".", "build", "bin", "engine", "Lib", "site-packages")
 	}
-	
+
 	absTarget, err := filepath.Abs(targetDir)
 	if err != nil {
 		return err
@@ -433,7 +433,7 @@ func findFfmpegPath() (string, error) {
 	if _, err := os.Stat(ffmpegPath); err == nil {
 		return ffmpegPath, nil
 	}
-	
+
 	// Dev fallback
 	devFfmpeg := filepath.Join(".", "build", "bin", "ffmpeg.exe")
 	if _, err := os.Stat(devFfmpeg); err == nil {
@@ -446,7 +446,7 @@ func findFfmpegPath() (string, error) {
 // ValidateVideoFile runs ffmpeg on the video file to verify it's a valid media container with audio streams
 func (a *App) ValidateVideoFile(videoPath string) VideoValidationResult {
 	result := VideoValidationResult{IsValid: false, HasAudio: false}
-	
+
 	ffmpegPath, err := findFfmpegPath()
 	if err != nil {
 		// If ffmpeg is missing, we can't perform the check; assume valid
@@ -463,13 +463,13 @@ func (a *App) ValidateVideoFile(videoPath string) VideoValidationResult {
 
 	cmd := exec.Command(ffmpegPath, "-i", videoPath)
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
-	
+
 	out, _ := cmd.CombinedOutput()
 	outputStr := string(out)
 
 	// ffmpeg returns exit status 1 when running without output path (as we are doing with -i),
 	// so we check output content rather than cmd.Run() error.
-	if strings.Contains(outputStr, "Invalid data found when processing input") || 
+	if strings.Contains(outputStr, "Invalid data found when processing input") ||
 	   strings.Contains(outputStr, "Duration: N/A") && !strings.Contains(outputStr, "Stream #") {
 		result.ErrorMessage = "The file is not a valid video or audio format."
 		return result
@@ -481,7 +481,7 @@ func (a *App) ValidateVideoFile(videoPath string) VideoValidationResult {
 	}
 
 	result.IsValid = true
-	
+
 	if strings.Contains(outputStr, "Audio:") {
 		result.HasAudio = true
 	} else {
