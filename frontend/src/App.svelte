@@ -70,7 +70,7 @@
   let queueElapsedSeconds = 0;
   let queueTimerInterval = null;
 
-  let selectedModel = "distil-large-v3";
+  let selectedModel = "distil-medium.en";
   let showVramWarning = false;
   let detectedVramGB = 0;
   let requiredVramGB = 0;
@@ -143,17 +143,17 @@
     window.addEventListener("drop", preventDefaultBehavior, false);
 
     await runCheckRequirements();
-    
+
     try {
       const config = await LoadConfig();
       selectedTimecodeFormat = config.timecodeFormat || "davinci";
-      selectedModel = config.selectedModel || "distil-large-v3";
+      selectedModel = config.selectedModel || "distil-medium.en";
       selectedDeviceMode = config.selectedDeviceMode || "cuda";
       prePromptFilePath = config.prePromptFilePath || "";
     } catch (err) {
       console.error("Failed to load config file, falling back to localStorage:", err);
       selectedTimecodeFormat = localStorage.getItem('timecodeFormat') || "davinci";
-      selectedModel = localStorage.getItem('selectedModel') || "distil-large-v3";
+      selectedModel = localStorage.getItem('selectedModel') || "distil-medium.en";
       selectedDeviceMode = localStorage.getItem('selectedDeviceMode') || "cuda";
       prePromptFilePath = localStorage.getItem('prePromptFilePath') || "";
     } finally {
@@ -329,7 +329,7 @@
     } else if (line.startsWith("[LOG] ")) {
       const msg = line.substring(6).trim();
       const logLine = `[INFO] ${msg}`;
-      
+
       let stageUpdate = {};
       if (msg.includes("Stage 1/3:")) {
         stageUpdate = { stage: 1 };
@@ -541,7 +541,7 @@
 
     if (newItems.length > 0) {
       queue = [...queue, ...newItems];
-      
+
       // If nothing is selected, select the first of the newly added items
       if (selectedQueueIndex === -1) {
         selectQueueItem(queue.length - newItems.length);
@@ -553,15 +553,15 @@
 
   function removeFromQueue(index) {
     if (index === activeQueueIndex) return; // Prevent removing currently transcribing item
-    
+
     const wasSelected = selectedQueueIndex === index;
     queue = queue.filter((_, i) => i !== index);
-    
+
     // Adjust activeQueueIndex
     if (activeQueueIndex > index) {
       activeQueueIndex--;
     }
-    
+
     // Adjust selectedQueueIndex
     if (wasSelected) {
       if (queue.length > 0) {
@@ -591,7 +591,7 @@
         break;
       }
     }
-    
+
     if (found !== -1) {
       selectedQueueIndex = found;
     } else {
@@ -621,7 +621,7 @@
       transcriptionText = item.text || "";
       elapsedSeconds = item.elapsedSeconds || 0;
       duration = item.duration || "";
-      
+
       if (item.status === 'completed') {
         currentStage = 4;
       } else if (item.status === 'transcribing') {
@@ -670,7 +670,7 @@
 
         activeQueueIndex = nextIdx;
         const currentItem = queue[nextIdx];
-        
+
         updateQueueItem(nextIdx, { status: 'transcribing', progress: 0, statusMessage: 'Initializing...' });
 
         selectQueueItem(nextIdx);
@@ -700,12 +700,12 @@
       if (selectedQueueIndex === index) {
         statusMessage = "Verifying file format...";
       }
-      
+
       const validation = await ValidateVideoFile(path);
       if (!validation.isValid) {
         const errMsg = "Error: " + validation.errorMessage;
-        updateQueueItem(index, { 
-          status: 'failed', 
+        updateQueueItem(index, {
+          status: 'failed',
           statusMessage: errMsg,
           error: validation.errorMessage
         });
@@ -716,8 +716,8 @@
       }
       if (!validation.hasAudio) {
         const errMsg = "Error: " + validation.errorMessage;
-        updateQueueItem(index, { 
-          status: 'failed', 
+        updateQueueItem(index, {
+          status: 'failed',
           statusMessage: errMsg,
           error: validation.errorMessage
         });
@@ -733,10 +733,10 @@
     if (selectedDeviceMode === 'cuda' && !requirements.cudaLibsExists) {
       showCudaPrompt = true;
       const errMsg = "Error: CUDA DLLs missing";
-      updateQueueItem(index, { 
-        status: 'failed', 
+      updateQueueItem(index, {
+        status: 'failed',
         statusMessage: errMsg,
-        error: "CUDA DLLs missing" 
+        error: "CUDA DLLs missing"
       });
       if (selectedQueueIndex === index) {
         statusMessage = errMsg;
@@ -798,17 +798,17 @@
 
     try {
       const result = await TranscribeVideo(path, selectedDeviceMode, selectedTimecodeFormat, selectedModel, prePromptFilePath);
-      
+
       if (selectedQueueIndex === index) {
         transcriptionText = result;
         statusMessage = "Transcription completed successfully!";
         progress = 100;
         currentStage = 4;
       }
-      
-      updateQueueItem(index, { 
-        status: 'completed', 
-        progress: 100, 
+
+      updateQueueItem(index, {
+        status: 'completed',
+        progress: 100,
         text: result,
         statusMessage: "Completed"
       });
@@ -817,14 +817,14 @@
       if (selectedQueueIndex === index) {
         currentStage = 0;
       }
-      
+
       const errStr = (err && err.message) || String(err) || "";
       let isCancelled = errStr.toLowerCase().includes("cancelled") || !queueProcessing;
       const finalStatus = isCancelled ? 'cancelled' : 'failed';
       const finalMsg = isCancelled ? 'Cancelled' : ('Failed: ' + err);
-      
-      updateQueueItem(index, { 
-        status: finalStatus, 
+
+      updateQueueItem(index, {
+        status: finalStatus,
         error: err.message || err,
         statusMessage: finalMsg,
         stage: 0
@@ -927,8 +927,8 @@
   }
 </script>
 
-<div 
-  class="h-screen w-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden select-none" 
+<div
+  class="h-screen w-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden select-none"
   style="background: radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15), transparent), radial-gradient(circle at 10% 80%, rgba(168, 85, 247, 0.12), transparent), #090d16;"
 >
 
@@ -980,8 +980,8 @@
         <button
           on:click={() => activeTab = 'transcribe'}
           class="flex items-center space-x-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-250 cursor-pointer
-            {activeTab === 'transcribe' 
-              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/25' 
+            {activeTab === 'transcribe'
+              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/25'
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/30'}"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -992,8 +992,8 @@
         <button
           on:click={() => activeTab = 'settings'}
           class="flex items-center space-x-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-250 cursor-pointer
-            {activeTab === 'settings' 
-              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/25' 
+            {activeTab === 'settings'
+              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/25'
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/30'}"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -1024,14 +1024,14 @@
               {requirementsError}
             </div>
             <div class="flex items-center space-x-2 shrink-0 self-center">
-              <button 
-                on:click={() => showEnvPrompt = true} 
+              <button
+                on:click={() => showEnvPrompt = true}
                 class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold border border-indigo-500/30 transition-all shadow shadow-indigo-600/20 cursor-pointer active:scale-98"
               >
                 Auto-Install Setup
               </button>
-              <button 
-                on:click={runCheckRequirements} 
+              <button
+                on:click={runCheckRequirements}
                 class="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-semibold border border-amber-500/30 transition-all cursor-pointer active:scale-98"
               >
                 Retry Check
@@ -1077,8 +1077,8 @@
                   <span>Transcription Queue ({queue.length})</span>
                 </span>
                 {#if queue.length > 0}
-                  <button 
-                    on:click={clearCompletedFromQueue} 
+                  <button
+                    on:click={clearCompletedFromQueue}
                     disabled={transcribing}
                     class="text-[9px] font-bold text-slate-400 hover:text-red-400 bg-slate-950/60 border border-slate-800/80 px-2 py-0.5 rounded transition-colors disabled:opacity-30 disabled:pointer-events-none"
                   >
@@ -1088,7 +1088,7 @@
               </div>
 
               <!-- Queue Items -->
-              <div 
+              <div
                 on:click={queue.length === 0 ? browseVideo : null}
                 class="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar min-h-0 {queue.length === 0 ? 'cursor-pointer hover:bg-slate-900/10 rounded-xl transition-all' : ''}"
               >
@@ -1102,7 +1102,7 @@
                   </div>
                 {:else}
                   {#each queue as item, i}
-                    <div 
+                    <div
                       on:click={() => selectQueueItem(i)}
                       class="p-2.5 rounded-xl border transition-all cursor-pointer relative group flex items-center justify-between text-left
                         {selectedQueueIndex === i ? 'bg-indigo-950/20 border-indigo-500/50 shadow-md' : 'bg-slate-950/40 border-slate-900/60 hover:bg-slate-900/30'}"
@@ -1120,13 +1120,13 @@
                           {:else if item.status === 'cancelled'}
                             <span class="h-2 w-2 rounded-full bg-amber-500 shrink-0" title="Cancelled"></span>
                           {/if}
-                          
+
                           <span class="text-xs font-semibold truncate block {item.status === 'transcribing' ? 'text-indigo-300' : 'text-slate-300'}" title={item.name}>
                             {item.name}
                           </span>
                         </div>
                         <span class="text-[9px] text-slate-500 block truncate mt-0.5" title={item.path}>{item.path}</span>
-                        
+
                         {#if item.status === 'transcribing'}
                           <div class="h-1 w-full bg-slate-900 rounded-full overflow-hidden mt-1.5">
                             <div class="h-full bg-indigo-500 rounded-full" style="width: {item.progress}%"></div>
@@ -1138,8 +1138,8 @@
                         {#if item.status === 'transcribing'}
                           <span class="text-[10px] font-mono text-indigo-400 font-bold shrink-0">{item.progress.toFixed(0)}%</span>
                         {/if}
-                        
-                        <button 
+
+                        <button
                           on:click|stopPropagation={() => removeFromQueue(i)}
                           disabled={transcribing}
                           class="h-5 w-5 rounded hover:bg-red-950/40 text-slate-550 hover:text-red-400 flex items-center justify-center transition-all disabled:opacity-0 disabled:pointer-events-none"

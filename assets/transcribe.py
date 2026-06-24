@@ -141,12 +141,19 @@ def load_and_transcribe(device_mode, video_path, output_path, format_style, mode
     from faster_whisper import WhisperModel
 
     def create_whisper_model(device, compute_type):
-        try:
-            # Try loading strictly from local cache first to avoid HTTP request overhead
-            return WhisperModel(model_size, device=device, compute_type=compute_type, local_files_only=False) # TODO: fix
+        model = WhisperModel(model_size, device=device, compute_type=compute_type, local_files_only=True)
+        if "v3" in model_size.lower():
+            model.feature_extractor.mel_filters = model.feature_extractor.get_mel_filters(
+                model.feature_extractor.sampling_rate, model.feature_extractor.n_fft, n_mels=128
+            )
         except Exception as e:
             print(f"[LOG] Model '{model_size}' not found in local cache (or offline check failed: {str(e)}). Querying Hugging Face Hub...")
-            return WhisperModel(model_size, device=device, compute_type=compute_type, local_files_only=False)
+            model = WhisperModel(model_size, device=device, compute_type=compute_type, local_files_only=False)
+            if "v3" in model_size.lower():
+                model.feature_extractor.mel_filters = model.feature_extractor.get_mel_filters(
+                    model.feature_extractor.sampling_rate, model.feature_extractor.n_fft, n_mels=128
+                )
+        return model
 
     if device_mode == "cuda":
         print(f"[LOG] Stage 1/3: Loading Whisper model '{model_size}' strictly on GPU (CUDA, float16)...")
@@ -207,8 +214,8 @@ def main():
                         help="Inference execution device. cuda = GPU Only (Default), cpu = CPU Only, auto = GPU with CPU fallback.")
     parser.add_argument("--format", choices=["davinci", "premiere", "avid", "fcp", "seconds", "srt", "vtt"], default="davinci",
                         help="Timecode format style. Default is davinci.")
-    parser.add_argument("--model", choices=["distil-small.en", "distil-medium.en", "distil-large-v2", "distil-large-v3"], default="distil-large-v3",
-                        help="Whisper model size. Default is distil-large-v3.")
+    parser.add_argument("--model", choices=["distil-small.en", "distil-medium.en", "distil-large-v2", "distil-large-v3"], default="distil-medium.en",
+                        help="Whisper model size. Default is distil-medium.en.")
 
     args = parser.parse_args()
 

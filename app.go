@@ -852,7 +852,7 @@ func getConfigPaths() (string, string) {
 func (a *App) LoadConfig() AppConfig {
 	config := AppConfig{
 		TimecodeFormat:     "davinci",
-		SelectedModel:      "distil-large-v3",
+		SelectedModel:      "distil-medium.en",
 		SelectedDeviceMode: "cuda",
 		PrePromptFilePath:  "",
 	}
