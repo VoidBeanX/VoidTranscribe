@@ -9,15 +9,26 @@ import (
 	"strings"
 	"syscall"
 
+	"VoidTranscribe/assets"
+
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 )
 
 //go:embed all:frontend/dist
-var assets embed.FS
+var wailsAssets embed.FS
 
 func main() {
+	// Write README.txt to the executable directory if not present
+	if exePath, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exePath)
+		readmePath := filepath.Join(exeDir, "README.txt")
+		if _, err := os.Stat(readmePath); os.IsNotExist(err) {
+			_ = os.WriteFile(readmePath, assets.Readme, 0644)
+		}
+	}
+
 	startupPath := ""
 	if len(os.Args) > 1 {
 		targetPath := os.Args[1]
@@ -43,13 +54,17 @@ func main() {
 		Width:  1024,
 		Height: 900,
 		AssetServer: &assetserver.Options{
-			Assets: assets,
+			Assets: wailsAssets,
 		},
 		BackgroundColour: &options.RGBA{R: 15, G: 23, B: 42, A: 1}, // Matches sleek dark slate background
 		OnStartup:        app.startup,
 		OnShutdown:       app.shutdown,
 		Bind: []interface{}{
 			app,
+		},
+		DragAndDrop: &options.DragAndDrop{
+			EnableFileDrop:     false,
+			DisableWebViewDrop: true,
 		},
 	})
 
@@ -98,25 +113,25 @@ func findEnginePaths() (string, string, error) {
 	exeDir := filepath.Dir(exePath)
 
 	// Primary location: adjacent to the executable (production setup)
-	pythonPath := filepath.Join(exeDir, "engine", "python.exe")
-	scriptPath := filepath.Join(exeDir, "engine", "transcribe.py")
+	pythonPath := filepath.Join(exeDir, "cache", "engine", "python.exe")
+	scriptPath := filepath.Join(exeDir, "cache", "engine", "transcribe.py")
 
 	if _, err := os.Stat(pythonPath); err == nil {
 		return pythonPath, scriptPath, nil
 	}
 
-	// Development Fallback 1: check build/bin/engine relative to current working directory
-	devPythonPath := filepath.Join(".", "build", "bin", "engine", "python.exe")
-	devScriptPath := filepath.Join(".", "build", "bin", "engine", "transcribe.py")
+	// Development Fallback 1: check build/bin/cache/engine relative to current working directory
+	devPythonPath := filepath.Join(".", "build", "bin", "cache", "engine", "python.exe")
+	devScriptPath := filepath.Join(".", "build", "bin", "cache", "engine", "transcribe.py")
 	if _, err := os.Stat(devPythonPath); err == nil {
 		absPython, _ := filepath.Abs(devPythonPath)
 		absScript, _ := filepath.Abs(devScriptPath)
 		return absPython, absScript, nil
 	}
 
-	// Development Fallback 2: check engine/ relative to current working directory
-	cwdPythonPath := filepath.Join(".", "engine", "python.exe")
-	cwdScriptPath := filepath.Join(".", "engine", "transcribe.py")
+	// Development Fallback 2: check cache/engine relative to current working directory
+	cwdPythonPath := filepath.Join(".", "cache", "engine", "python.exe")
+	cwdScriptPath := filepath.Join(".", "cache", "engine", "transcribe.py")
 	if _, err := os.Stat(cwdPythonPath); err == nil {
 		absPython, _ := filepath.Abs(cwdPythonPath)
 		absScript, _ := filepath.Abs(cwdScriptPath)
@@ -140,9 +155,9 @@ func configureCmdEnv(cmd *exec.Cmd) {
 		return
 	}
 	exeDir := filepath.Dir(exePath)
-	targetDir := filepath.Join(exeDir, "engine", "Lib", "site-packages")
+	targetDir := filepath.Join(exeDir, "cache", "engine", "Lib", "site-packages")
 	if strings.Contains(exePath, "Temp") || strings.Contains(exePath, "go-build") {
-		targetDir = filepath.Join(".", "build", "bin", "engine", "Lib", "site-packages")
+		targetDir = filepath.Join(".", "build", "bin", "cache", "engine", "Lib", "site-packages")
 	}
 	absTarget, err := filepath.Abs(targetDir)
 	if err != nil {

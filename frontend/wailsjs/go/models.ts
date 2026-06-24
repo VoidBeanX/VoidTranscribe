@@ -1,5 +1,23 @@
 export namespace main {
 	
+	export class AppConfig {
+	    timecodeFormat: string;
+	    selectedModel: string;
+	    selectedDeviceMode: string;
+	    prePromptFilePath: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new AppConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.timecodeFormat = source["timecodeFormat"];
+	        this.selectedModel = source["selectedModel"];
+	        this.selectedDeviceMode = source["selectedDeviceMode"];
+	        this.prePromptFilePath = source["prePromptFilePath"];
+	    }
+	}
 	export class RequirementsStatus {
 	    pythonExists: boolean;
 	    transcribeScriptOk: boolean;
